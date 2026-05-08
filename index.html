@@ -190,31 +190,13 @@
                   <h2>백테스트 옵션</h2>
                   <div class="field-grid">
                     <label>시장<select data-option="market"><option value="US_STOCK">미국 주식</option><option value="KR_STOCK">한국 주식</option><option value="ETF">ETF</option></select></label>
-                    <label>종목<input data-option="symbols" list="symbol-list" value="SPY" /></label>
+                    <label>종목<select data-option="symbols"></select></label>
                     <label>시작일<input data-option="startDate" type="date" value="2020-01-01" /></label>
                     <label>종료일<input data-option="endDate" type="date" value="2025-12-31" /></label>
                     <label>초기 자본<input data-option="initialCapital" value="10,000,000" /></label>
                     <label>수수료<input data-option="feeRate" value="0.015%" /></label>
                     <label>슬리피지<input data-option="slippageRate" value="0.03%" /></label>
-                    <label>벤치마크<input data-option="benchmark" list="symbol-list" value="SPY" /></label>
-                  </div>
-                  <datalist id="symbol-list">
-                    <option value="SPY"></option>
-                    <option value="005930" label="삼성전자"></option>
-                    <option value="BND" label="Vanguard Total Bond Market ETF"></option>
-                    <option value="DBC" label="Invesco DB Commodity Index Tracking Fund"></option>
-                    <option value="GLD" label="SPDR Gold Shares"></option>
-                    <option value="IEF" label="iShares 7-10 Year Treasury Bond ETF"></option>
-                    <option value="QQQ" label="Invesco QQQ Trust"></option>
-                    <option value="SHY" label="iShares 1-3 Year Treasury Bond ETF"></option>
-                    <option value="TLT" label="iShares 20+ Year Treasury Bond ETF"></option>
-                    <option value="VBR" label="Vanguard Small-Cap Value ETF"></option>
-                    <option value="VTI" label="Vanguard Total Stock Market ETF"></option>
-                    <option value="VXUS" label="Vanguard Total International Stock ETF"></option>
-                  </datalist>
-                  <div class="db-symbol-list" aria-label="SQLite DB 등록 종목">
-                    <p>SQLite DB 등록 종목</p>
-                    <div id="db-symbol-chips"></div>
+                    <label>벤치마크<select data-option="benchmark"></select></label>
                   </div>
                 </section>
 
@@ -264,9 +246,9 @@
 
               <div class="metric-cards">
                 <article><span>총수익률</span><strong data-metric="totalReturn">-</strong><em data-metric-note="totalReturn">실행 대기</em></article>
-                <article><span>CAGR</span><strong data-metric="cagr">-</strong><em data-metric-note="cagr">연평균 성장률</em></article>
-                <article><span>MDD</span><strong data-metric="mdd">-</strong><em data-metric-note="mdd">최대 낙폭</em></article>
-                <article><span>Sharpe</span><strong data-metric="sharpe">-</strong><em data-metric-note="sharpe">위험 대비 수익</em></article>
+                <article><span>CAGR (연평균 성장률)</span><strong data-metric="cagr">-</strong><em data-metric-note="cagr">연평균 성장률</em></article>
+                <article><span>MDD (최대 낙폭)</span><strong data-metric="mdd">-</strong><em data-metric-note="mdd">최대 낙폭</em></article>
+                <article><span>Sharpe (위험 대비 수익)</span><strong data-metric="sharpe">-</strong><em data-metric-note="sharpe">위험 대비 수익</em></article>
               </div>
 
               <div class="result-grid backtest-result-grid">

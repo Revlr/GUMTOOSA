@@ -14,7 +14,7 @@ async function apiRequest(path, options = {}) {
     let detail = `API request failed with HTTP ${response.status}`;
     try {
       const payload = await response.json();
-      detail = payload.detail || detail;
+      detail = formatApiErrorDetail(payload.detail) || detail;
     } catch (_error) {
       detail = response.statusText || detail;
     }
@@ -179,7 +179,7 @@ const strategies = [
   },
   {
     id: "strategy_balanced_60_40",
-    name: "안정형 60/40 포트폴리오",
+    name: "60/40 전략 포트폴리오",
     description: "주식 60%, 채권 40%로 구성하는 전통적인 균형형 자산배분입니다.",
     market: "ETF",
     symbols: ["VTI", "BND"],
@@ -235,6 +235,35 @@ const strategies = [
     updatedAt: "2026-05-09T00:00:00.000Z",
   },
   {
+    id: "strategy_barbell_portfolio",
+    name: "바벨 전략 포트폴리오",
+    description: "단기채를 중심축으로 두고 장기채와 주식을 함께 편입해 안정성과 수익 기회를 동시에 노리는 보수형 바벨 전략입니다.",
+    market: "ETF",
+    symbols: ["SHY", "TLT", "VTI"],
+    timeframe: "1d",
+    buyCondition: { operator: "AND", rules: [] },
+    sellCondition: { operator: "AND", rules: [] },
+    allocation: {
+      rebalanceFrequency: "quarterly",
+      weights: [
+        { symbol: "SHY", weight: 0.55, label: "단기 미국채" },
+        { symbol: "TLT", weight: 0.25, label: "장기 미국채" },
+        { symbol: "VTI", weight: 0.2, label: "미국 전체 주식" },
+      ],
+    },
+    backtestOptions: {
+      startDate: "2020-01-01",
+      endDate: "2025-12-31",
+      initialCapital: 10000000,
+      feeRate: 0.00015,
+      slippageRate: 0.0003,
+      positionSizing: "target_allocation",
+      benchmark: "SPY",
+    },
+    isPublic: false,
+    updatedAt: "2026-05-09T00:00:00.000Z",
+  },
+  {
     id: "strategy_permanent_portfolio",
     name: "영구 포트폴리오",
     description: "주식, 장기채, 금, 단기채/현금을 25%씩 나누는 방어형 포트폴리오입니다.",
@@ -266,7 +295,7 @@ const strategies = [
   },
   {
     id: "strategy_all_weather",
-    name: "올웨더 포트폴리오",
+    name: "올웨더 전략 포트폴리오",
     description: "주식, 장기채, 중기채, 금, 원자재를 섞어 경기 국면 분산을 노리는 포트폴리오입니다.",
     market: "ETF",
     symbols: ["VTI", "TLT", "IEF", "GLD", "DBC"],
@@ -297,7 +326,7 @@ const strategies = [
   },
   {
     id: "strategy_golden_butterfly",
-    name: "골든 버터플라이",
+    name: "골든 버터플라이 포트폴리오",
     description: "주식, 소형가치주, 장기채, 단기채, 금을 20%씩 나누는 안정 성장형 포트폴리오입니다.",
     market: "ETF",
     symbols: ["VTI", "VBR", "TLT", "SHY", "GLD"],
@@ -344,6 +373,7 @@ const marketData = {
 };
 
 const dbSymbols = [
+  { symbol: "SPY", name: "SPDR S&P 500 ETF Trust", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
   { symbol: "005930", name: "삼성전자", rows: 1554, startDate: "2020-01-02", endDate: "2026-05-07" },
   { symbol: "BND", name: "Vanguard Total Bond Market ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
   { symbol: "DBC", name: "Invesco DB Commodity Index Tracking Fund", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
@@ -357,10 +387,21 @@ const dbSymbols = [
   { symbol: "VXUS", name: "Vanguard Total International Stock ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
 ];
 
-const templateStrategies = strategies
-  .filter((strategy) => !strategy.allocation)
-  .map((strategy) => clone(strategy));
 const starterStrategyIds = new Set(["strategy_ma_cross", "strategy_rsi_rebound", "strategy_dual_momentum"]);
+const templateStrategyIds = [
+  "strategy_all_weather",
+  "strategy_balanced_60_40",
+  "strategy_barbell_portfolio",
+  "strategy_permanent_portfolio",
+  "strategy_golden_butterfly",
+  "strategy_ma_cross",
+  "strategy_rsi_rebound",
+  "strategy_dual_momentum",
+];
+const templateStrategies = templateStrategyIds
+  .map((id) => strategies.find((strategy) => strategy.id === id))
+  .filter(Boolean)
+  .map((strategy) => clone(strategy));
 templateStrategies.forEach(applyPortfolioConditions);
 strategies.forEach(applyPortfolioConditions);
 strategies.splice(0, strategies.length, ...strategies.filter((strategy) => starterStrategyIds.has(strategy.id)));
@@ -608,6 +649,22 @@ function renderRule(rule) {
   `;
 }
 
+function formatApiErrorDetail(detail) {
+  if (!detail) return "";
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === "string") return item;
+        const location = Array.isArray(item.loc) ? item.loc.join(".") : "";
+        const message = item.msg || item.detail || JSON.stringify(item);
+        return location ? `${location}: ${message}` : message;
+      })
+      .join("\n");
+  }
+  return detail.msg || detail.detail || JSON.stringify(detail);
+}
+
 function renderAllocation(strategy) {
   if (!strategy.allocation) return "";
   return `
@@ -621,6 +678,18 @@ function renderAllocation(strategy) {
           </div>
         `)
         .join("")}
+    </div>
+  `;
+}
+
+function renderPortfolioRuleSummary(strategy) {
+  if (!strategy.allocation) return "";
+  const frequencyLabel = rebalanceLabel(strategy.allocation.rebalanceFrequency);
+  return `
+    <div class="rule-chip portfolio-rule">
+      <span>${frequencyLabel}</span>
+      <b>자동</b>
+      <span>목표 비중 기준 리밸런싱</span>
     </div>
   `;
 }
@@ -643,14 +712,16 @@ function renderStrategy(strategy) {
   document.querySelector("#strategy-name").value = strategy.name;
   document.querySelector("#backtest-title").textContent = `${strategy.name} 결과`;
   document.querySelector('[data-rule-list="buy"]').innerHTML = strategy.allocation
-    ? `${renderAllocation(strategy)}${strategy.buyCondition.rules.map(renderRule).join("")}`
+    ? `${renderAllocation(strategy)}${renderPortfolioRuleSummary(strategy)}`
     : strategy.buyCondition.rules.map(renderRule).join("");
-  document.querySelector('[data-rule-list="sell"]').innerHTML = strategy.sellCondition.rules.map(renderRule).join("");
+  document.querySelector('[data-rule-list="sell"]').innerHTML = strategy.allocation
+    ? renderPortfolioRuleSummary(strategy)
+    : strategy.sellCondition.rules.map(renderRule).join("");
   document.querySelector('[data-condition-operator="buy"]').value = `${strategy.buyCondition.operator} 조건`;
   document.querySelector('[data-condition-operator="sell"]').value = `${strategy.sellCondition.operator} 조건`;
   document.querySelector('[data-option="market"]').value = strategy.market;
   document.querySelector('[data-option="symbols"]').value = strategy.allocation
-    ? strategy.allocation.weights.map((item) => item.symbol).join(", ")
+    ? strategy.allocation.weights[0]?.symbol || ""
     : strategy.symbols.join(", ");
   document.querySelector('[data-option="startDate"]').value = strategy.backtestOptions.startDate;
   document.querySelector('[data-option="endDate"]').value = strategy.backtestOptions.endDate;
@@ -723,26 +794,13 @@ function renderOperandControls() {
   document.querySelector("#rule-right").value = "indicator.SMA.60";
 }
 
-function renderDbSymbols() {
-  const container = document.querySelector("#db-symbol-chips");
-  if (!container) return;
-
-  container.innerHTML = dbSymbols
-    .map(
-      (item) => `
-        <button class="symbol-chip" type="button" data-symbol="${item.symbol}" title="${item.name} · ${item.rows.toLocaleString("ko-KR")} rows · ${item.startDate}~${item.endDate}">
-          <b>${item.symbol}</b>
-          <span>${item.name}</span>
-        </button>
-      `,
-    )
+function renderSymbolDropdowns() {
+  const options = dbSymbols
+    .map((item) => `<option value="${item.symbol}">${item.symbol} · ${item.name}</option>`)
     .join("");
 
-  container.querySelectorAll("[data-symbol]").forEach((button) => {
-    button.addEventListener("click", () => {
-      document.querySelector('[data-option="symbols"]').value = button.dataset.symbol;
-    });
-  });
+  document.querySelector('[data-option="symbols"]').innerHTML = options;
+  document.querySelector('[data-option="benchmark"]').innerHTML = options;
 }
 
 function operandFromControl(value) {
@@ -862,13 +920,15 @@ function validateStrategy(strategy, options) {
     });
   }
 
-  [...strategy.buyCondition.rules, ...strategy.sellCondition.rules].forEach((rule) => {
-    const signature = JSON.stringify([rule.left, rule.comparator, rule.right]);
-    if (ruleIds.has(signature)) errors.push("동일한 조건이 중복되어 있습니다.");
-    ruleIds.add(signature);
-  });
+  if (!isPortfolio) {
+    [...strategy.buyCondition.rules, ...strategy.sellCondition.rules].forEach((rule) => {
+      const signature = JSON.stringify([rule.left, rule.comparator, rule.right]);
+      if (ruleIds.has(signature)) errors.push("동일한 조건이 중복되어 있습니다.");
+      ruleIds.add(signature);
+    });
+  }
 
-  if (!options.symbols.length) errors.push("백테스트할 종목을 입력해야 합니다.");
+  if (!isPortfolio && !options.symbols.length) errors.push("백테스트할 종목을 입력해야 합니다.");
   if (!isPortfolio && !marketData[options.symbols[0]]) errors.push(`${options.symbols[0] || "입력 종목"} 목업 데이터가 없습니다.`);
   if (options.benchmark && !marketData[options.benchmark]) warnings.push(`${options.benchmark} 벤치마크 데이터가 없어 비교를 생략합니다.`);
   if (!options.startDate || !options.endDate || options.startDate >= options.endDate) {
@@ -1332,6 +1392,10 @@ async function runBacktest() {
   const strategy = getSelectedStrategy();
   const options = readOptions();
   const button = document.querySelector("#run-backtest");
+  if (strategy.allocation) {
+    options.symbols = strategy.allocation.weights.map((item) => item.symbol);
+    options.positionSizing = "target_allocation";
+  }
   strategy.market = options.market;
   strategy.symbols = options.symbols;
   strategy.backtestOptions = { ...strategy.backtestOptions, ...options };
@@ -1481,7 +1545,7 @@ document.querySelector("#share-result").addEventListener("click", shareLatestRes
 
 loadSavedStrategies();
 renderOperandControls();
-renderDbSymbols();
+renderSymbolDropdowns();
 renderStrategyList();
 renderTemplateList();
 renderCommunity();

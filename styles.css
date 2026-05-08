@@ -649,50 +649,6 @@ select {
   gap: 8px;
 }
 
-.db-symbol-list {
-  display: grid;
-  gap: 8px;
-}
-
-.db-symbol-list p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-#db-symbol-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.symbol-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel-soft);
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-}
-
-.symbol-chip b {
-  color: var(--brand);
-}
-
-.symbol-chip span {
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .condition-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -811,6 +767,7 @@ select {
 .metric-cards span {
   color: var(--muted);
   font-size: 13px;
+  line-height: 1.35;
 }
 
 .metric-cards strong {
