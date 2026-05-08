@@ -20,7 +20,7 @@
 | 프론트엔드 구조, 상태, 컴포넌트 구현 | [docs/FRONTEND_RULES.md](./docs/FRONTEND_RULES.md) | [docs/STRATEGY_SCHEMA.md](./docs/STRATEGY_SCHEMA.md), [docs/REACT_MIGRATION_PLAN.md](./docs/REACT_MIGRATION_PLAN.md) |
 | 전략 빌더, 조건 JSON, 템플릿 | [docs/STRATEGY_SCHEMA.md](./docs/STRATEGY_SCHEMA.md) | [docs/BACKTEST_RULES.md](./docs/BACKTEST_RULES.md) |
 | 백테스트 엔진, 성과 지표, 결과 포맷 | [docs/BACKTEST_RULES.md](./docs/BACKTEST_RULES.md) | [docs/DATA_RULES.md](./docs/DATA_RULES.md), [docs/STRATEGY_SCHEMA.md](./docs/STRATEGY_SCHEMA.md) |
-| 시장 데이터, 목업 데이터, 데이터 출처 | [docs/DATA_RULES.md](./docs/DATA_RULES.md) | [docs/BACKTEST_RULES.md](./docs/BACKTEST_RULES.md) |
+| 시장 데이터, 목업 데이터, 데이터 출처 | [docs/DATA_RULES.md](./docs/DATA_RULES.md) | [docs/MOCK_DATA_INVENTORY.md](./docs/MOCK_DATA_INVENTORY.md), [backend/README.md](./backend/README.md), [docs/BACKTEST_RULES.md](./docs/BACKTEST_RULES.md) |
 | 저장, 공유, 커뮤니티 데이터 모델 | [docs/DATA_MODEL_RULES.md](./docs/DATA_MODEL_RULES.md) | [docs/PRODUCT_RULES.md](./docs/PRODUCT_RULES.md) |
 | QA, 접근성, 회귀 확인 | [docs/QA_CHECKLIST.md](./docs/QA_CHECKLIST.md) | 변경한 영역의 세부 규칙 문서 |
 

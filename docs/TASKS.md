@@ -53,8 +53,50 @@
 | MVP-019 | DONE | 실사용 가능한 백테스트 빌더 구현 | 조건 추가/삭제, 템플릿 적용, 벤치마크 비교, 저장/실행 흐름이 실제로 동작함 | [STRATEGY_SCHEMA.md](./STRATEGY_SCHEMA.md), [BACKTEST_RULES.md](./BACKTEST_RULES.md) |
 | MVP-020 | DONE | 안정형 포트폴리오 템플릿 추가 | 전략 템플릿 탭에 널리 알려진 안정형 자산배분 템플릿 5개와 포트폴리오 백테스트가 추가됨 | [STRATEGY_SCHEMA.md](./STRATEGY_SCHEMA.md), [BACKTEST_RULES.md](./BACKTEST_RULES.md) |
 | MVP-021 | DONE | 포트폴리오 템플릿 매수/매도 조건 표시 | 안정형 포트폴리오 템플릿 적용 시 리밸런싱 매수/매도 조건이 백테스트 조건 영역에 함께 표시됨 | [STRATEGY_SCHEMA.md](./STRATEGY_SCHEMA.md), [UI_UX_RULES.md](./UI_UX_RULES.md) |
+| DATA-001 | DONE | 목업 데이터 인벤토리 작성 | 실제 데이터 전환 전 교체해야 할 목업 요소가 위치와 교체 방향별로 정리됨 | [MOCK_DATA_INVENTORY.md](./MOCK_DATA_INVENTORY.md), [DATA_RULES.md](./DATA_RULES.md) |
+| DATA-002 | DONE | 시장 데이터 백엔드 골격 생성 | FastAPI 기반 시장 데이터 API, Alpha Vantage 어댑터, 목업 fallback, 실행 문서가 생성됨 | [DATA_RULES.md](./DATA_RULES.md), [BACKTEST_RULES.md](./BACKTEST_RULES.md) |
+| ENV-001 | DONE | Python 3.12 설치 및 백엔드 문법 검증 | Python 3.12이 설치되고 백엔드 Python 파일 컴파일 검사가 통과함 | [../backend/README.md](../backend/README.md) |
+| ENV-002 | DONE | 백엔드 가상환경 구성 및 실행 확인 | 백엔드 의존성이 설치되고 FastAPI 헬스체크/목업 데이터 엔드포인트가 응답함 | [../backend/README.md](../backend/README.md) |
+| DATA-003 | DONE | Alpha Vantage API 키 설정 및 live 데이터 확인 | 백엔드 `.env`에 API 키가 설정되고 최근 SPY 일봉 live 응답이 확인됨 | [../backend/README.md](../backend/README.md), [DATA_RULES.md](./DATA_RULES.md) |
+| DATA-004 | DONE | SQLite 시장 데이터 캐시 추가 | 외부/목업 OHLCV 응답이 로컬 SQLite DB에 저장되고 재조회 시 캐시로 반환됨 | [../backend/README.md](../backend/README.md), [DATA_RULES.md](./DATA_RULES.md) |
 
 ## 완료 기록
+
+### 2026-05-09 - DATA-003 Alpha Vantage API 키 설정 및 live 데이터 확인
+
+- 변경: 사용자가 제공한 Alpha Vantage API 키를 커밋 제외 대상인 `backend/.env`에 설정하고, 백엔드 Alpha Vantage 어댑터를 무료 키에서 사용 가능한 `TIME_SERIES_DAILY` + `outputsize=compact` 방식으로 수정함
+- 검증: FastAPI 서버를 임시 실행해 `/api/market/daily?symbol=SPY&start=2026-04-01&end=2026-05-08&provider=alpha_vantage`가 `data_mode: live`, `data_source: alpha_vantage`로 응답하는 것을 확인함
+- 참고: Alpha Vantage 무료 키는 장기 과거 데이터용 `outputsize=full`과 adjusted daily endpoint가 premium으로 제한되어 있어, 현재 live 연동은 최근 compact 일봉 데이터 범위에서 동작함
+
+### 2026-05-09 - DATA-004 SQLite 시장 데이터 캐시 추가
+
+- 변경: `backend/app/database.py`를 추가해 `ohlcv_bars` SQLite 테이블을 생성하고, `/api/market/daily`가 캐시 우선 조회, `refresh=true` 강제 갱신, fetch 후 저장을 수행하도록 수정함. `/api/db/stats` 엔드포인트와 `SQLITE_PATH` 설정도 추가함
+- 검증: 백엔드를 임시 실행해 `provider=mock&refresh=true` 요청 후 동일 요청이 `data_mode: cached`로 반환되고, DB 통계에서 `total_rows: 8`과 `backend/data/gumtoosa.sqlite3` 경로가 확인됨. `compileall backend\app`과 `git diff --check`도 통과함
+- 참고: `backend/data/`는 `.gitignore`에 포함되어 로컬 캐시 DB가 커밋되지 않음
+
+### 2026-05-09 - ENV-001 Python 3.12 설치 및 백엔드 문법 검증
+
+- 변경: `winget`으로 Python 3.12.10을 사용자 범위에 설치함
+- 검증: `C:\Users\gonow\AppData\Local\Programs\Python\Python312\python.exe --version`으로 Python 3.12.10을 확인하고, `python.exe -m compileall backend\app`으로 백엔드 Python 파일 문법 검사를 통과함
+- 참고: 현재 셸에서는 Microsoft Store Python 실행 별칭이 `python` 명령을 방해할 수 있어, 새 터미널을 열거나 실제 설치 경로의 `python.exe`를 사용해야 함
+
+### 2026-05-09 - ENV-002 백엔드 가상환경 구성 및 실행 확인
+
+- 변경: `backend/.venv` 가상환경을 생성하고 `backend/requirements.txt` 의존성을 설치했으며, 로컬 실행용 `backend/run.ps1`을 추가함
+- 검증: FastAPI 서버를 `127.0.0.1:8000`에서 임시 실행해 `/health`와 `/api/market/daily?symbol=SPY&start=2020-01-01&end=2020-01-10&provider=mock` 응답을 확인함
+- 참고: `backend/.env`는 로컬 실행용으로 생성했으며 `.gitignore`에 의해 커밋되지 않음. 실제 Alpha Vantage 사용 시 `ALPHA_VANTAGE_API_KEY` 값을 설정해야 함
+
+### 2026-05-09 - DATA-002 시장 데이터 백엔드 골격 생성
+
+- 변경: `backend/`에 FastAPI 앱, 설정, CORS, 헬스체크, 지원 심볼 목록, 일봉 OHLCV 조회 엔드포인트, Alpha Vantage 어댑터, 목업 fallback, `.env.example`, `requirements.txt`, 실행 README를 추가함
+- 검증: 파일 구조와 주요 엔드포인트 구현을 확인함. 현재 로컬 환경에 Python 실행 파일이 없어 `compileall` 및 서버 실행 검증은 수행하지 못함
+- 참고: 실제 live 데이터 사용 시 `backend/.env`에 `ALPHA_VANTAGE_API_KEY`를 설정해야 하며, 다음 단계는 프론트의 `marketData`를 `/api/market/daily` 호출로 교체하는 작업
+
+### 2026-05-09 - DATA-001 목업 데이터 인벤토리 작성
+
+- 변경: `docs/MOCK_DATA_INVENTORY.md`에 시장 지수 UI, 홈 카드, 백테스트 가격 데이터, 결과 신뢰도 문구, 전략 템플릿 기본값, 커뮤니티 샘플, 종목 선택 후보의 목업 요소를 정리하고 `AGENTS.md`, `docs/README.md`에 연결함
+- 검증: `index.html`, `app.js`, `docs` 내 목업/샘플/정적 데이터 키워드를 검색해 주요 교체 대상을 분류함
+- 참고: 실제 데이터 전환 시에는 `marketData`/`generateMockPrices()` 제거와 데이터 로더 인터페이스 도입이 1순위
 
 ### 2026-05-09 - MVP-021 포트폴리오 템플릿 매수/매도 조건 표시
 

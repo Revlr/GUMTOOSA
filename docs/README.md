@@ -13,10 +13,15 @@
 | [STRATEGY_SCHEMA.md](./STRATEGY_SCHEMA.md) | 전략 조건, 템플릿, 백테스트 요청 스키마 |
 | [BACKTEST_RULES.md](./BACKTEST_RULES.md) | 백테스트 엔진, 지표 계산, 결과 표시 규칙 |
 | [DATA_RULES.md](./DATA_RULES.md) | 시장 데이터, 목업 데이터, 데이터 품질 규칙 |
+| [MOCK_DATA_INVENTORY.md](./MOCK_DATA_INVENTORY.md) | 실제 데이터 전환 전 교체해야 할 목업 데이터 목록 |
 | [DATA_MODEL_RULES.md](./DATA_MODEL_RULES.md) | 저장, 공유, 커뮤니티 데이터 모델 후보 |
 | [QA_CHECKLIST.md](./QA_CHECKLIST.md) | 기능 완료 전 검증 체크리스트 |
 | [REACT_MIGRATION_PLAN.md](./REACT_MIGRATION_PLAN.md) | React/Next.js 전환 계획 |
 | [MVP_RECOMMENDATIONS.md](./MVP_RECOMMENDATIONS.md) | MVP 보강 추천 사항 |
+
+## 백엔드
+
+시장 데이터 API는 [../backend](../backend) 디렉토리에 FastAPI 기반으로 생성되어 있습니다. 실제 데이터 연동 시 `backend/.env`에 외부 API 키를 설정하고 `/api/market/daily` 응답을 프론트 백테스트 데이터 소스로 연결합니다.
 
 ## 공통 개발 원칙
 
