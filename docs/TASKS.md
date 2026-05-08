@@ -59,8 +59,89 @@
 | ENV-002 | DONE | 백엔드 가상환경 구성 및 실행 확인 | 백엔드 의존성이 설치되고 FastAPI 헬스체크/목업 데이터 엔드포인트가 응답함 | [../backend/README.md](../backend/README.md) |
 | DATA-003 | DONE | Alpha Vantage API 키 설정 및 live 데이터 확인 | 백엔드 `.env`에 API 키가 설정되고 최근 SPY 일봉 live 응답이 확인됨 | [../backend/README.md](../backend/README.md), [DATA_RULES.md](./DATA_RULES.md) |
 | DATA-004 | DONE | SQLite 시장 데이터 캐시 추가 | 외부/목업 OHLCV 응답이 로컬 SQLite DB에 저장되고 재조회 시 캐시로 반환됨 | [../backend/README.md](../backend/README.md), [DATA_RULES.md](./DATA_RULES.md) |
+| DATA-005 | DONE | Yahoo Finance DB 적재 구현 | Yahoo Finance 일봉 데이터가 SQLite DB에 저장되고 DB 조회 API로 반환됨 | [../backend/README.md](../backend/README.md), [DATA_RULES.md](./DATA_RULES.md) |
+
+## 후속 작업 보드
+
+| ID | 상태 | 작업 | 완료 기준 | 선행 조건 |
+| --- | --- | --- | --- | --- |
+| FE-001 | DONE | 프론트엔드 개발 서버 구성 | 정적 `index.html`, `app.js`, `styles.css`가 로컬 서버에서 실행되고 백엔드 API 주소를 환경별로 분리함 | 없음 |
+| FE-002 | DONE | 프론트 API 클라이언트 레이어 추가 | `app.js`에서 직접 데이터 배열을 읽지 않고 `/api` 호출 함수로 심볼/일봉/백테스트 결과를 가져옴 | FE-001 |
+| FE-003 | DONE | 목업 `marketData` 제거 및 실제 DB 데이터 연결 | 백테스트 실행 시 `/api/market/daily?provider=db` 또는 백엔드 백테스트 API를 사용하고, 목업 데이터 없음 오류 문구가 실제 데이터 없음 문구로 바뀜 | FE-002, BE-001 |
+| FE-004 | TODO | 프론트 로딩/오류/빈 데이터 상태 구현 | 데이터 조회 중, API 실패, DB 미적재, 기간 데이터 부족 상태가 화면에서 명확히 표시됨 | FE-002 |
+| BE-001 | DONE | 백테스트 실행 API 구현 | 프론트 전략 입력을 받아 DB OHLCV로 백테스트를 실행하고 지표/차트/거래 로그를 표준 응답으로 반환함 | DATA-005 |
+| BE-002 | TODO | 전략/조건 스키마 백엔드 검증 구현 | 프론트 조건 구조를 Pydantic 모델로 검증하고 잘못된 조건/기간/심볼 요청을 400 응답으로 차단함 | BE-001 |
+| BE-003 | DONE | 포트폴리오 리밸런싱 백테스트 API 구현 | 안정형 포트폴리오 템플릿의 비중/리밸런싱 조건을 서버에서 계산하고 결과를 반환함 | BE-001 |
+| BE-004 | TODO | DB 데이터 관리 API 보강 | 심볼별 적재 범위, 누락 구간, 최신 갱신 시각, 강제 갱신 API를 제공함 | DATA-005 |
+| BE-005 | TODO | 목업 fallback 정책 정리 | 운영 기본값은 실제 DB 데이터로 고정하고, 목업 fallback은 개발 모드에서만 명시적으로 사용되도록 분리함 | BE-001 |
+| OPS-001 | TODO | 프론트/백엔드 동시 실행 스크립트 작성 | 한 명령으로 프론트 서버와 FastAPI 서버를 실행하고 포트 충돌 시 안내함 | FE-001 |
+| QA-001 | TODO | API-프론트 통합 검증 시나리오 작성 | 실제 Yahoo DB 데이터 기준으로 단일 종목/포트폴리오 백테스트가 화면에 표시되는 체크리스트가 생김 | FE-003, BE-003 |
+| UX-001 | DONE | 포트폴리오 템플릿 조건 고정 해제 | 안정형 포트폴리오 템플릿의 매수/매도 조건을 삭제/추가할 수 있음 | FE-003 |
+| UX-002 | DONE | `app.js` 한글 문자열 인코딩 복구 | 깨진 한글 표시 문구가 읽을 수 있는 문자열로 복구됨 | UX-001 |
+| UX-003 | DONE | 안정형 포트폴리오 템플릿 숨김 | 전략 템플릿 탭에서 안정형 포트폴리오 5개가 표시되지 않음 | UX-002 |
+| DATA-006 | DONE | SQLite 등록 종목 프론트 표시 | SPY 외 DB 적재 종목이 종목 입력 후보와 화면 칩으로 표시됨 | DATA-005 |
 
 ## 완료 기록
+
+### 2026-05-09 - DATA-006 SQLite 등록 종목 프론트 표시
+
+- 변경: SQLite DB 통계를 기준으로 SPY 외 추가 가능한 11개 종목을 백테스트 종목 입력 후보와 `SQLite DB 등록 종목` 칩 목록으로 표시함
+- 검증: `dbSymbols`에 SPY 제외 11개 심볼이 반영된 것을 확인했고, `index.html`과 `app.js`가 프론트 서버에서 HTTP 200으로 로드됨. `git diff --check`도 통과함
+- 참고: 백엔드 DB/수집/백테스트 API는 변경하지 않고 프론트 표시만 추가함
+
+### 2026-05-09 - UX-003 안정형 포트폴리오 템플릿 숨김
+
+- 변경: `templateStrategies` 생성 시 `allocation`이 있는 포트폴리오 전략을 제외해 전략 템플릿 탭에는 기술적 전략 3개만 표시되도록 변경함
+- 검증: `app.js`에서 템플릿 필터가 적용된 것을 확인했고, 포트폴리오 전략 정의는 유지되어 있으며, 프론트 서버에서 `app.js`가 HTTP 200으로 로드됨. `git diff --check`도 통과함
+- 참고: 포트폴리오 백테스트용 백엔드 API, DB 데이터, 기존 포트폴리오 계산 코드는 건드리지 않아 다른 시스템 영향은 없음
+
+### 2026-05-09 - UX-002 `app.js` 한글 문자열 인코딩 복구
+
+- 변경: `app.js`를 정상 한글 문자열 기준으로 복구하고, API 클라이언트/백엔드 백테스트 실행/포트폴리오 조건 고정 해제 변경을 다시 반영함
+- 검증: UTF-8 기준으로 깨진 문자 후보를 점검했고, 프론트 서버에서 `app.js`가 HTTP 200으로 로드되는 것을 확인함
+- 참고: 파일은 UTF-8로 저장하며, PowerShell 기본 출력에서는 UTF-8 표시가 환경에 따라 다르게 보일 수 있음
+
+### 2026-05-09 - UX-001 포트폴리오 템플릿 조건 고정 해제
+
+- 변경: 안정형 포트폴리오 템플릿에 자동 적용되는 리밸런싱 매수/매도 조건의 `locked` 처리를 제거하고, 포트폴리오 전략에서도 조건 추가/삭제 UI를 사용할 수 있도록 변경함
+- 검증: 코드에서 `rule.locked` 기반 고정 렌더링과 포트폴리오 조건 추가 차단 경로가 제거된 것을 확인함
+- 참고: 포트폴리오 백테스트 계산은 현재 서버에서 자산 비중/리밸런싱 주기를 기준으로 수행되며, 조건 UI는 전략 설명/편집 영역으로 유지됨
+
+### 2026-05-09 - FE-001 프론트엔드 개발 서버 구성
+
+- 변경: `frontend/server.py`, `frontend/run.ps1`, `config.js`를 추가하고 `index.html`에서 `config.js`를 먼저 로드하도록 연결함
+- 검증: `compileall frontend\server.py`를 통과했고, `http://127.0.0.1:5173/index.html` 요청이 HTTP 200으로 응답함
+- 참고: 현재는 기존 정적 앱을 유지하며, API 연동은 `window.GUMTOOSA_CONFIG.API_BASE_URL`을 기준으로 후속 작업에서 연결함
+
+### 2026-05-09 - BE-001 백테스트 실행 API 구현
+
+- 변경: `backend/app/backtest.py`에 단일 종목 백테스트 엔진을 추가하고, `POST /api/backtests`가 DB에 저장된 Yahoo Finance 일봉으로 지표/차트/거래 로그를 반환하도록 연결함
+- 검증: `compileall backend\app`을 통과했고, FastAPI `TestClient`로 SPY 2020-01-01~2025-12-31 이동평균 전략 요청이 HTTP 200, `status: success`, `dataMode: cached`, 거래 13건, equity series 1508개를 반환함
+- 참고: 포트폴리오 리밸런싱 백테스트는 `BE-003`에서 별도로 구현함
+
+### 2026-05-09 - FE-002 프론트 API 클라이언트 레이어 추가
+
+- 변경: `app.js` 상단에 `window.GUMTOOSA_CONFIG.API_BASE_URL` 기반 `gumtoosaApi` 클라이언트를 추가하고 헬스체크, DB 통계, 심볼 목록, 일봉 조회, 백테스트 실행 호출 함수를 분리함
+- 검증: 프론트 서버에서 `http://127.0.0.1:5173/app.js`가 HTTP 200으로 응답함. 현재 로컬에 Node.js가 없어 별도 JS 문법 검사는 수행하지 못함
+- 참고: 실제 실행 버튼이 API를 호출하도록 바꾸는 작업은 `FE-003`에서 진행함
+
+### 2026-05-09 - BE-003 포트폴리오 리밸런싱 백테스트 API 구현
+
+- 변경: 백엔드 백테스트 엔진에 포트폴리오 리밸런싱 실행 경로를 추가하고, `/api/backtests`가 안정형 포트폴리오 템플릿의 비중과 리밸런싱 주기를 DB 일봉 기준으로 계산하도록 확장함
+- 검증: `compileall backend\app`을 통과했고, FastAPI `TestClient`로 VTI 60% / BND 40% 분기 리밸런싱 포트폴리오가 HTTP 200, `status: success`, `dataMode: cached`, 리밸런싱 거래 48건, equity series 1508개를 반환함
+- 참고: 리밸런싱은 현재 `quarterly`, `annual` 주기를 지원함
+
+### 2026-05-09 - FE-003 목업 marketData 실행 경로 제거 및 실제 DB 데이터 연결
+
+- 변경: 프론트의 `runBacktest()`가 단일 종목과 포트폴리오 모두 로컬 `backtest()` 대신 `gumtoosaApi.runBacktest()`로 백엔드 `/api/backtests`를 호출하도록 변경함
+- 검증: 프론트 서버에서 `app.js`가 HTTP 200으로 로드되고, 백엔드 `/api/backtests` 포트폴리오 요청이 `status: success`, `dataMode: cached`, 리밸런싱 거래 48건, equity series 1508개를 반환함
+- 참고: `app.js` 안의 기존 목업 생성 함수는 후속 정리 대상으로 남아 있으나, 실행 버튼 경로에서는 더 이상 사용하지 않음
+
+### 2026-05-09 - DATA-005 Yahoo Finance DB 적재 구현
+
+- 변경: 백엔드에 Yahoo Finance 일봉 provider, SQLite 저장/조회 연동, `/api/market/ingest/yahoo` 일괄 적재 API, `provider=db|yahoo_finance` 조회 경로를 추가함
+- 검증: `compileall backend\app backend\scripts`를 통과했고, `backend\scripts\ingest_yahoo.py --start 2020-01-01 --end 2026-05-09 --refresh`로 12개 심볼의 Yahoo Finance 실제 일봉 19,110행을 SQLite에 저장함. 기존 `source=mock` DB 행 8개는 삭제했고, SPY DB 조회가 `data_mode: cached`, `data_source: yahoo_finance`로 반환됨
+- 참고: Yahoo Finance chart endpoint는 API 키가 필요 없지만 공식 보증 API가 아니므로 장애 시 대체 데이터 공급자 검토 필요
 
 ### 2026-05-09 - DATA-003 Alpha Vantage API 키 설정 및 live 데이터 확인
 

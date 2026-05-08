@@ -1,3 +1,46 @@
+const appConfig = window.GUMTOOSA_CONFIG || {};
+const apiBaseUrl = appConfig.API_BASE_URL || "http://127.0.0.1:8000";
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    let detail = `API request failed with HTTP ${response.status}`;
+    try {
+      const payload = await response.json();
+      detail = payload.detail || detail;
+    } catch (_error) {
+      detail = response.statusText || detail;
+    }
+    throw new Error(detail);
+  }
+
+  return response.json();
+}
+
+const gumtoosaApi = {
+  getHealth: () => apiRequest("/health"),
+  getDbStats: () => apiRequest("/api/db/stats"),
+  listSymbols: () => apiRequest("/api/market/symbols"),
+  getDailyMarketData: ({ symbol, start, end, provider = "db", refresh = false }) => {
+    const params = new URLSearchParams({ symbol, start, end, provider, refresh: String(refresh) });
+    return apiRequest(`/api/market/daily?${params.toString()}`);
+  },
+  runBacktest: (strategy, options) =>
+    apiRequest("/api/backtests", {
+      method: "POST",
+      body: JSON.stringify({ strategy, options }),
+    }),
+};
+
+window.gumtoosaApi = gumtoosaApi;
+
 const strategies = [
   {
     id: "strategy_ma_cross",
@@ -300,7 +343,23 @@ const marketData = {
   VBR: generateMockPrices("VBR", 130, 0.0003, 0.014, "2020-01-01", "2025-12-31"),
 };
 
-const templateStrategies = strategies.map((strategy) => clone(strategy));
+const dbSymbols = [
+  { symbol: "005930", name: "삼성전자", rows: 1554, startDate: "2020-01-02", endDate: "2026-05-07" },
+  { symbol: "BND", name: "Vanguard Total Bond Market ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "DBC", name: "Invesco DB Commodity Index Tracking Fund", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "GLD", name: "SPDR Gold Shares", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "IEF", name: "iShares 7-10 Year Treasury Bond ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "QQQ", name: "Invesco QQQ Trust", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "SHY", name: "iShares 1-3 Year Treasury Bond ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "TLT", name: "iShares 20+ Year Treasury Bond ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "VBR", name: "Vanguard Small-Cap Value ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "VTI", name: "Vanguard Total Stock Market ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+  { symbol: "VXUS", name: "Vanguard Total International Stock ETF", rows: 1596, startDate: "2020-01-02", endDate: "2026-05-08" },
+];
+
+const templateStrategies = strategies
+  .filter((strategy) => !strategy.allocation)
+  .map((strategy) => clone(strategy));
 const starterStrategyIds = new Set(["strategy_ma_cross", "strategy_rsi_rebound", "strategy_dual_momentum"]);
 templateStrategies.forEach(applyPortfolioConditions);
 strategies.forEach(applyPortfolioConditions);
@@ -411,14 +470,12 @@ function portfolioRuleSet(strategy) {
       rules: [
         {
           id: `${strategy.id}_buy_rebalance_day`,
-          locked: true,
           left: { type: "event", label: frequencyLabel },
           comparator: "==",
           right: { type: "state", label: "도래" },
         },
         {
           id: `${strategy.id}_buy_underweight`,
-          locked: true,
           left: { type: "portfolio", label: "자산별 현재 비중" },
           comparator: "<",
           right: { type: "portfolio", label: "목표 비중" },
@@ -430,14 +487,12 @@ function portfolioRuleSet(strategy) {
       rules: [
         {
           id: `${strategy.id}_sell_rebalance_day`,
-          locked: true,
           left: { type: "event", label: frequencyLabel },
           comparator: "==",
           right: { type: "state", label: "도래" },
         },
         {
           id: `${strategy.id}_sell_overweight`,
-          locked: true,
           left: { type: "portfolio", label: "자산별 현재 비중" },
           comparator: ">",
           right: { type: "portfolio", label: "목표 비중" },
@@ -449,6 +504,15 @@ function portfolioRuleSet(strategy) {
 
 function applyPortfolioConditions(strategy) {
   if (!strategy.allocation) return strategy;
+  if (strategy.buyCondition.rules.length || strategy.sellCondition.rules.length) {
+    strategy.buyCondition.rules.forEach((rule) => {
+      delete rule.locked;
+    });
+    strategy.sellCondition.rules.forEach((rule) => {
+      delete rule.locked;
+    });
+    return strategy;
+  }
   const conditions = portfolioRuleSet(strategy);
   strategy.buyCondition = conditions.buyCondition;
   strategy.sellCondition = conditions.sellCondition;
@@ -534,13 +598,12 @@ function operandLabel(operand) {
 }
 
 function renderRule(rule) {
-  const removable = !rule.locked;
   return `
-    <div class="rule-chip ${removable ? "" : "locked"}" data-rule-id="${rule.id}">
+    <div class="rule-chip" data-rule-id="${rule.id}">
       <span>${operandLabel(rule.left)}</span>
       <b>${rule.comparator}</b>
       <span>${operandLabel(rule.right)}</span>
-      ${removable ? `<button class="remove-rule" type="button" data-remove-rule="${rule.id}" title="조건 삭제" aria-label="조건 삭제">×</button>` : '<span class="rule-lock">고정</span>'}
+      <button class="remove-rule" type="button" data-remove-rule="${rule.id}" title="조건 삭제" aria-label="조건 삭제">×</button>
     </div>
   `;
 }
@@ -660,6 +723,28 @@ function renderOperandControls() {
   document.querySelector("#rule-right").value = "indicator.SMA.60";
 }
 
+function renderDbSymbols() {
+  const container = document.querySelector("#db-symbol-chips");
+  if (!container) return;
+
+  container.innerHTML = dbSymbols
+    .map(
+      (item) => `
+        <button class="symbol-chip" type="button" data-symbol="${item.symbol}" title="${item.name} · ${item.rows.toLocaleString("ko-KR")} rows · ${item.startDate}~${item.endDate}">
+          <b>${item.symbol}</b>
+          <span>${item.name}</span>
+        </button>
+      `,
+    )
+    .join("");
+
+  container.querySelectorAll("[data-symbol]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelector('[data-option="symbols"]').value = button.dataset.symbol;
+    });
+  });
+}
+
 function operandFromControl(value) {
   const option = operandOptions.find((candidate) => candidate.value === value) || operandOptions[0];
   const operand = clone(option.operand);
@@ -730,6 +815,12 @@ function applyTemplate(templateId) {
   strategy.symbols = [...template.symbols];
   strategy.buyCondition = clone(template.buyCondition);
   strategy.sellCondition = clone(template.sellCondition);
+  if (template.allocation) {
+    strategy.allocation = clone(template.allocation);
+    applyPortfolioConditions(strategy);
+  } else {
+    delete strategy.allocation;
+  }
   strategy.backtestOptions = clone(template.backtestOptions);
   strategy.updatedAt = new Date().toISOString();
   renderStrategyList();
@@ -1237,9 +1328,10 @@ function renderResult(result) {
   renderTrades(result.trades);
 }
 
-function runBacktest() {
+async function runBacktest() {
   const strategy = getSelectedStrategy();
   const options = readOptions();
+  const button = document.querySelector("#run-backtest");
   strategy.market = options.market;
   strategy.symbols = options.symbols;
   strategy.backtestOptions = { ...strategy.backtestOptions, ...options };
@@ -1252,8 +1344,20 @@ function runBacktest() {
   if (validation.warnings.length) showValidation(validation.warnings, "warning");
   else clearValidation();
 
-  latestRun = backtest(strategy, options);
-  renderResult(latestRun);
+  button.disabled = true;
+  button.dataset.originalText = button.dataset.originalText || button.textContent;
+  button.textContent = "실행 중";
+
+  try {
+    latestRun = await gumtoosaApi.runBacktest(strategy, options);
+    renderResult(latestRun);
+  } catch (error) {
+    showValidation([error.message || "백테스트 실행 중 오류가 발생했습니다."], "error");
+    return;
+  } finally {
+    button.disabled = false;
+    button.textContent = button.dataset.originalText;
+  }
 
   document.querySelector(".results-panel").animate(
     [
@@ -1377,6 +1481,7 @@ document.querySelector("#share-result").addEventListener("click", shareLatestRes
 
 loadSavedStrategies();
 renderOperandControls();
+renderDbSymbols();
 renderStrategyList();
 renderTemplateList();
 renderCommunity();

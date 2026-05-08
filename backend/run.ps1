@@ -1,3 +1,7 @@
+param(
+  [switch]$Reload
+)
+
 $ErrorActionPreference = "Stop"
 
 $BackendDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -9,7 +13,12 @@ if (!(Test-Path $Python)) {
 
 Push-Location $BackendDir
 try {
-  & $Python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+  if ($Reload) {
+    & $Python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+  }
+  else {
+    & $Python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+  }
 }
 finally {
   Pop-Location
