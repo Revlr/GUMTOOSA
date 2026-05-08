@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>검투사 GUMTOOSA</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#home" aria-label="검투사 홈">
+          <span class="brand-mark">G</span>
+          <span>
+            <strong>검투사</strong>
+            <small>GUMTOOSA</small>
+          </span>
+        </a>
+
+        <nav class="primary-nav" aria-label="주요 메뉴">
+          <button class="nav-link active" data-view="home">홈</button>
+          <button class="nav-link" data-view="backtest">백테스트</button>
+          <button class="nav-link" data-view="community">커뮤니티</button>
+        </nav>
+
+        <div class="market-strip" aria-label="시장 지수">
+          <span>KOSPI <b>2,735.41</b> <em class="up">+0.82%</em></span>
+          <span>S&P 500 <b>5,218.19</b> <em class="down">-0.16%</em></span>
+          <span>NASDAQ <b>16,340.87</b> <em class="up">+0.31%</em></span>
+        </div>
+      </header>
+
+      <main>
+        <section class="view active" id="home" aria-labelledby="home-title">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">No-code strategy backtesting</p>
+              <h1 id="home-title">투자 전략을 만들고, 과거 데이터로 검증하고, 결과를 비교하세요.</h1>
+            </div>
+            <button class="primary-action" data-view-target="backtest">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              백테스트 시작
+            </button>
+          </div>
+
+          <div class="home-grid">
+            <section class="panel templates-panel" aria-labelledby="template-title">
+              <div class="section-title">
+                <h2 id="template-title">전략 템플릿</h2>
+                <button class="text-button" data-view-target="backtest">전체 보기</button>
+              </div>
+              <div class="template-grid">
+                <article class="strategy-card selected">
+                  <div class="card-kicker">기술적 분석</div>
+                  <h3>이동평균 돌파</h3>
+                  <p>20일선이 60일선을 상향 돌파하고 RSI가 과열 전까지 진입합니다.</p>
+                  <div class="metric-row">
+                    <span>CAGR <b>18.4%</b></span>
+                    <span>MDD <b>-13.8%</b></span>
+                  </div>
+                </article>
+                <article class="strategy-card">
+                  <div class="card-kicker">역추세</div>
+                  <h3>RSI 과매도 반등</h3>
+                  <p>RSI 35 이하 구간에서 분할 진입하고 과매수 구간에서 청산합니다.</p>
+                  <div class="metric-row">
+                    <span>CAGR <b>14.2%</b></span>
+                    <span>MDD <b>-10.5%</b></span>
+                  </div>
+                </article>
+                <article class="strategy-card">
+                  <div class="card-kicker">포트폴리오</div>
+                  <h3>ETF 듀얼모멘텀</h3>
+                  <p>상대 강도가 높은 ETF로 월 1회 교체하는 모멘텀 전략입니다.</p>
+                  <div class="metric-row">
+                    <span>CAGR <b>12.7%</b></span>
+                    <span>MDD <b>-8.9%</b></span>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="panel market-panel" aria-labelledby="overview-title">
+              <div class="section-title">
+                <h2 id="overview-title">금일 시황</h2>
+                <span class="timestamp">목업 데이터</span>
+              </div>
+              <div class="index-list">
+                <div>
+                  <span>KOSPI</span>
+                  <strong>2,735.41</strong>
+                  <em class="up">+0.82%</em>
+                </div>
+                <div>
+                  <span>KOSDAQ</span>
+                  <strong>871.08</strong>
+                  <em class="down">-0.24%</em>
+                </div>
+                <div>
+                  <span>S&P 500</span>
+                  <strong>5,218.19</strong>
+                  <em class="down">-0.16%</em>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel popular-panel" aria-labelledby="popular-title">
+              <div class="section-title">
+                <h2 id="popular-title">최근 인기 전략</h2>
+              </div>
+              <ol class="ranking-list">
+                <li><span>저변동성 퀄리티</span><b>Sharpe 1.42</b></li>
+                <li><span>거래량 급증 추종</span><b>승률 57%</b></li>
+                <li><span>60/40 월간 리밸런싱</span><b>MDD -7.4%</b></li>
+              </ol>
+            </section>
+          </div>
+        </section>
+
+        <section class="view backtest-view" id="backtest" aria-labelledby="backtest-title">
+          <div class="workspace backtest-workspace">
+            <aside class="strategy-sidebar backtest-strategy-list" aria-label="전략 목록">
+              <button class="add-strategy" id="add-strategy">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                전략 추가
+              </button>
+              <div class="strategy-list">
+                <button class="strategy-item active">
+                  <span>이동평균 돌파</span>
+                  <small>방금 수정</small>
+                </button>
+                <button class="strategy-item">
+                  <span>RSI 과매도 반등</span>
+                  <small>어제 수정</small>
+                </button>
+                <button class="strategy-item">
+                  <span>ETF 듀얼모멘텀</span>
+                  <small>3일 전 수정</small>
+                </button>
+              </div>
+            </aside>
+
+            <aside class="builder-sidebar backtest-builder" aria-labelledby="backtest-title">
+              <div class="builder-header">
+                <button class="icon-button" id="toggle-builder" title="패널 접기">
+                  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" /></svg>
+                </button>
+                <div>
+                  <label for="strategy-name">전략 이름</label>
+                  <input id="strategy-name" value="이동평균 돌파" />
+                </div>
+              </div>
+              <span class="timestamp">마지막 수정: 방금 전</span>
+
+              <div class="tabs" role="tablist" aria-label="전략 편집 메뉴">
+                <button class="tab active" data-tab="conditions">전략 조건</button>
+                <button class="tab" data-tab="templates">전략 템플릿</button>
+              </div>
+
+              <div class="tab-panel active" id="conditions">
+                <section class="rule-group">
+                  <div class="rule-heading">
+                    <h2>매수 조건</h2>
+                    <button class="icon-button" title="매수 조건 추가">
+                      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                  </div>
+                  <div class="rule-list" data-rule-list="buy"></div>
+                  <select aria-label="매수 조건 결합 방식" data-condition-operator="buy">
+                    <option>AND 조건</option>
+                    <option>OR 조건</option>
+                  </select>
+                </section>
+
+                <section class="rule-group">
+                  <div class="rule-heading">
+                    <h2>매도 조건</h2>
+                    <button class="icon-button" title="매도 조건 추가">
+                      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                  </div>
+                  <div class="rule-list" data-rule-list="sell"></div>
+                  <select aria-label="매도 조건 결합 방식" data-condition-operator="sell">
+                    <option>AND 조건</option>
+                    <option>OR 조건</option>
+                  </select>
+                </section>
+
+                <section class="rule-group">
+                  <h2>백테스트 옵션</h2>
+                  <div class="field-grid">
+                    <label>시장<select data-option="market"><option value="US_STOCK">미국 주식</option><option value="KR_STOCK">한국 주식</option><option value="ETF">ETF</option></select></label>
+                    <label>종목<input data-option="symbols" list="symbol-list" value="SPY" /></label>
+                    <label>시작일<input data-option="startDate" type="date" value="2020-01-01" /></label>
+                    <label>종료일<input data-option="endDate" type="date" value="2025-12-31" /></label>
+                    <label>초기 자본<input data-option="initialCapital" value="10,000,000" /></label>
+                    <label>수수료<input data-option="feeRate" value="0.015%" /></label>
+                    <label>슬리피지<input data-option="slippageRate" value="0.03%" /></label>
+                    <label>벤치마크<input data-option="benchmark" list="symbol-list" value="SPY" /></label>
+                  </div>
+                  <datalist id="symbol-list">
+                    <option value="SPY"></option>
+                    <option value="QQQ"></option>
+                    <option value="005930"></option>
+                    <option value="VTI"></option>
+                    <option value="VXUS"></option>
+                    <option value="BND"></option>
+                    <option value="TLT"></option>
+                    <option value="IEF"></option>
+                    <option value="SHY"></option>
+                    <option value="GLD"></option>
+                    <option value="DBC"></option>
+                    <option value="VBR"></option>
+                  </datalist>
+                </section>
+
+                <section class="rule-group condition-composer" aria-labelledby="condition-composer-title">
+                  <h2 id="condition-composer-title">조건 추가</h2>
+                  <div class="condition-grid">
+                    <label>대상<select id="rule-target"><option value="buy">매수 조건</option><option value="sell">매도 조건</option></select></label>
+                    <label>왼쪽 값<select id="rule-left"></select></label>
+                    <label>비교<select id="rule-comparator"><option value=">">&gt;</option><option value=">=">&gt;=</option><option value="<">&lt;</option><option value="<=">&lt;=</option></select></label>
+                    <label>오른쪽 값<select id="rule-right"></select></label>
+                    <label class="number-input">숫자 값<input id="rule-number" value="55" /></label>
+                    <button class="secondary-action" id="add-rule" type="button">조건 추가</button>
+                  </div>
+                </section>
+
+                <div class="validation-panel" id="validation-panel" role="status" aria-live="polite"></div>
+
+                <div class="builder-actions">
+                  <button class="secondary-action" id="save-strategy">저장</button>
+                  <button class="primary-action" id="run-backtest">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                    실행
+                  </button>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="templates">
+                <div class="template-list" id="template-list"></div>
+              </div>
+            </aside>
+
+            <section class="results-panel backtest-results" aria-labelledby="backtest-title">
+              <div class="results-header">
+                <div>
+                  <p class="eyebrow">Backtest result</p>
+                  <h1 id="backtest-title">이동평균 돌파 결과</h1>
+                </div>
+                <button class="secondary-action" id="share-result">
+                  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13" /></svg>
+                  결과 공유
+                </button>
+              </div>
+
+              <div class="result-meta" id="result-meta" role="status" aria-live="polite">
+                목업 데이터 기준 결과입니다. 백테스트 결과는 투자 조언이 아니며 과거 성과가 미래 수익을 보장하지 않습니다.
+              </div>
+
+              <div class="metric-cards">
+                <article><span>총수익률</span><strong data-metric="totalReturn">-</strong><em data-metric-note="totalReturn">실행 대기</em></article>
+                <article><span>CAGR</span><strong data-metric="cagr">-</strong><em data-metric-note="cagr">연평균 성장률</em></article>
+                <article><span>MDD</span><strong data-metric="mdd">-</strong><em data-metric-note="mdd">최대 낙폭</em></article>
+                <article><span>Sharpe</span><strong data-metric="sharpe">-</strong><em data-metric-note="sharpe">위험 대비 수익</em></article>
+              </div>
+
+              <div class="result-grid backtest-result-grid">
+                <section class="panel chart-panel equity-panel wide" aria-labelledby="equity-title">
+                  <div class="section-title">
+                    <h2 id="equity-title">수익률 차트</h2>
+                    <div class="segmented">
+                      <button class="active">전략</button>
+                      <button>벤치마크</button>
+                    </div>
+                  </div>
+                  <div class="line-chart" id="equity-chart" role="img" aria-label="누적 수익률 곡선"></div>
+                </section>
+
+                <section class="panel summary-panel" aria-labelledby="summary-title">
+                  <div class="section-title">
+                    <h2 id="summary-title">성과 요약</h2>
+                  </div>
+                  <dl class="summary-list">
+                    <div><dt>거래 횟수</dt><dd data-summary="tradeCount">-</dd></div>
+                    <div><dt>승률</dt><dd data-summary="winRate">-</dd></div>
+                    <div><dt>평균 손익</dt><dd data-summary="averageTradeReturn">-</dd></div>
+                    <div><dt>변동성</dt><dd data-summary="volatility">-</dd></div>
+                  </dl>
+                </section>
+
+                <section class="panel" aria-labelledby="distribution-title">
+                  <div class="section-title">
+                    <h2 id="distribution-title">수익률 분포</h2>
+                  </div>
+                  <div class="bar-chart" id="return-distribution" aria-hidden="true"></div>
+                </section>
+
+                <section class="panel" aria-labelledby="heatmap-title">
+                  <div class="section-title">
+                    <h2 id="heatmap-title">월별 수익률</h2>
+                  </div>
+                  <div class="heatmap" id="monthly-returns" aria-hidden="true"></div>
+                </section>
+
+                <section class="panel" aria-labelledby="trade-title">
+                  <div class="section-title">
+                    <h2 id="trade-title">거래 요약</h2>
+                  </div>
+                  <table>
+                    <thead>
+                      <tr><th>종목</th><th>진입</th><th>수익률</th></tr>
+                    </thead>
+                    <tbody id="trade-log"></tbody>
+                  </table>
+                </section>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="community" aria-labelledby="community-title">
+          <div class="page-heading compact">
+            <div>
+              <p class="eyebrow">Community strategies</p>
+              <h1 id="community-title">투자 성향별 인기 전략과 랭킹</h1>
+            </div>
+          </div>
+
+          <div class="community-grid">
+            <section class="panel wide" aria-labelledby="taste-title">
+              <div class="section-title">
+                <h2 id="taste-title">투자 성향별 인기 전략</h2>
+              </div>
+              <div class="community-cards" id="community-strategies"></div>
+            </section>
+
+            <section class="panel" aria-labelledby="rank-title">
+              <div class="section-title">
+                <h2 id="rank-title">사용자 수익률 랭킹</h2>
+              </div>
+              <ol class="ranking-list" id="community-ranking"></ol>
+            </section>
+
+            <section class="panel" aria-labelledby="board-title">
+              <div class="section-title">
+                <h2 id="board-title">종목 토론</h2>
+              </div>
+              <div class="discussion-list" id="community-discussions"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
